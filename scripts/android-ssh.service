@@ -1,0 +1,14 @@
+[Unit]
+Description=Android SSH over USB - Auto Setup
+After=network.target
+
+[Service]
+Type=simple
+User=radxa
+Environment=HOME=/home/radxa
+ExecStart=/home/radxa/.local/bin/android-ssh-autostart.sh
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

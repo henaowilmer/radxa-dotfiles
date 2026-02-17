@@ -1,0 +1,40 @@
+# Lazygit Configuration
+gui:
+  theme:
+    selectedLineBgColor:
+      - reverse
+    selectedRangeBgColor:
+      - reverse
+  showFileTree: true
+  showRandomTip: false
+  showCommandLog: false
+
+git:
+  paging:
+    colorArg: always
+  commit:
+    signOff: false
+  merging:
+    manualCommit: false
+    args: ""
+
+keybinding:
+  universal:
+    quit: q
+    quit-alt1: <c-c>
+    return: <esc>
+    prevItem: <up>
+    nextItem: <down>
+    prevItem-alt: k
+    nextItem-alt: j
+    prevPage: ','
+    nextPage: '.'
+    scrollLeft: H
+    scrollRight: L
+    gotoTop: <
+    gotoBottom: '>'
+    togglePanel: <tab>
+    prevBlock: <left>
+    nextBlock: <right>
+    prevBlock-alt: h
+    nextBlock-alt: l
