@@ -94,7 +94,7 @@ alias ports='sudo netstat -tulanp'
 alias myip='curl -s ifconfig.me'
 alias mem='free -h'
 alias disk='df -h'
-alias temp='cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null | awk "{print \$1/1000}°C"'
+alias temp='cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null | awk "{printf \"%.1f°C\n\", \$1/1000}"'
 
 # ═══════════════════════════════════════════════════════════════
 # Aliases - Android/ADB
@@ -160,7 +160,7 @@ sysinfo() {
     echo "  Hostname: $(hostname)"
     echo "  Kernel:   $(uname -r)"
     echo "  Uptime:   $(uptime -p)"
-    echo "  CPU Temp: $(temp)"
+    echo "  CPU Temp: $(cat /sys/class/thermal/thermal_zone0/temp 2>/dev/null | awk '{printf "%.1f°C", $1/1000}')"
     echo "  Memory:   $(free -h | awk '/^Mem:/ {print $3 "/" $2}')"
     echo "  Disk:     $(df -h / | awk 'NR==2 {print $3 "/" $2 " (" $5 ")"}')"
     echo "  IP:       $(hostname -I | awk '{print $1}')"
