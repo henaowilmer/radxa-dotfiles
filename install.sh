@@ -43,12 +43,66 @@ detect_arch() {
     log_info "Arquitectura detectada: $ARCH"
 }
 
+# Configurar repositorio backports para Debian
+setup_backports() {
+    log_info "Configurando repositorio backports..."
+    
+    # Detectar versión de Debian
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$ID" = "debian" ]; then
+            CODENAME=$VERSION_CODENAME
+            BACKPORTS_FILE="/etc/apt/sources.list.d/50-${CODENAME}-backports.list"
+            
+            if [ ! -f "$BACKPORTS_FILE" ]; then
+                echo "deb http://deb.debian.org/debian ${CODENAME}-backports main contrib non-free" | sudo tee "$BACKPORTS_FILE" > /dev/null
+                log_success "Backports configurado para $CODENAME"
+            else
+                log_warn "Backports ya configurado"
+            fi
+        fi
+    fi
+}
+
+# Instalar Git desde backports (requerido >= 2.32 para lazygit)
+install_git() {
+    log_info "Instalando Git desde backports (>= 2.32 requerido para lazygit)..."
+    
+    # Detectar versión de Debian
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$ID" = "debian" ]; then
+            CODENAME=$VERSION_CODENAME
+            # Intentar instalar desde backports
+            if sudo apt-get install -y -qq git/${CODENAME}-backports 2>/dev/null; then
+                log_success "Git instalado desde backports: $(git --version)"
+            else
+                # Fallback a versión normal si backports no está disponible
+                sudo apt-get install -y -qq git
+                log_warn "Git instalado desde repositorio principal: $(git --version)"
+            fi
+        else
+            sudo apt-get install -y -qq git
+        fi
+    else
+        sudo apt-get install -y -qq git
+    fi
+}
+
 # Actualizar sistema e instalar dependencias básicas
 install_base() {
     log_info "Actualizando sistema e instalando dependencias..."
     sudo apt-get update -qq
+    
+    # Configurar backports primero
+    setup_backports
+    sudo apt-get update -qq
+    
+    # Instalar Git desde backports (lazygit requiere >= 2.32)
+    install_git
+    
+    # Instalar resto de dependencias
     sudo apt-get install -y -qq \
-        git \
         curl \
         wget \
         unzip \
