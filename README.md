@@ -164,6 +164,21 @@ chsh -s $(which fish)
 - Conexión a internet
 - sudo access
 
+### Versiones Recomendadas
+
+Para evitar problemas de compatibilidad, se recomienda:
+- **Fish Shell**: >= 3.2.0 (recomendado 3.6.0+)
+- **FZF**: >= 0.48.0 (para soporte de `--fish`)
+- **Carapace**: Se deshabilita automáticamente si hay incompatibilidades
+
+**Para Debian 11 (Bullseye):**
+```bash
+# Actualizar Fish desde backports
+sudo apt install -t bullseye-backports fish
+```
+
+**Nota:** La configuración detecta automáticamente las versiones instaladas y ajusta la funcionalidad en consecuencia.
+
 ## Créditos
 
 - [Gentleman.Dots](https://github.com/Gentleman-Programming/Gentleman.Dots) - Configuración base

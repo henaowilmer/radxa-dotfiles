@@ -59,23 +59,47 @@ if command -q atuin
 end
 
 if command -q fzf
-    fzf --fish | source
+    # Check if fzf supports --fish flag (v0.48+)
+    # Fallback to basic configuration for older versions
+    set fzf_version (fzf --version 2>/dev/null | string match -r '^\d+\.\d+' | string replace '.' '')
+    if test -n "$fzf_version"; and test $fzf_version -ge 048
+        fzf --fish | source
+    else
+        # Fallback for fzf < 0.48
+        set -gx FZF_DEFAULT_OPTS '--height 40% --layout=reverse --border'
+    end
 end
 
 # Carapace completions (if installed)
+# Note: Requires Fish 3.2.0+ and may have compatibility issues with some versions
 if command -q carapace
-    set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense'
+    # Check Fish version for compatibility
+    set fish_version (fish --version | string match -r '\d+\.\d+' | string replace '.' '')
+    
+    if test -n "$fish_version"; and test $fish_version -ge 32
+        # Only initialize if not already done or if there's no syntax error
+        set -l carapace_init_error 0
+        
+        # Create completions directory
+        if not test -d ~/.config/fish/completions
+            mkdir -p ~/.config/fish/completions
+        end
 
-    if not test -d ~/.config/fish/completions
-        mkdir -p ~/.config/fish/completions
+        if not test -f ~/.config/fish/completions/.initialized
+            carapace --list | awk '{print $1}' | xargs -I{} touch ~/.config/fish/completions/{}.fish 2>/dev/null
+            touch ~/.config/fish/completions/.initialized
+        end
+
+        # Try to source carapace, suppress errors if incompatible
+        set -Ux CARAPACE_BRIDGES 'zsh,fish,bash,inshellisense' 2>/dev/null
+        carapace _carapace 2>/dev/null | source 2>/dev/null
+        or set carapace_init_error 1
+        
+        # If there was an error, clean up and disable
+        if test $carapace_init_error -eq 1
+            set -e CARAPACE_BRIDGES 2>/dev/null
+        end
     end
-
-    if not test -f ~/.config/fish/completions/.initialized
-        carapace --list | awk '{print $1}' | xargs -I{} touch ~/.config/fish/completions/{}.fish
-        touch ~/.config/fish/completions/.initialized
-    end
-
-    carapace _carapace | source
 end
 
 # Disable greeting
