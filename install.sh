@@ -288,15 +288,21 @@ install_treesitter() {
     if command -v tree-sitter &> /dev/null; then
         log_warn "tree-sitter already installed"
     else
-        # tree-sitter CLI via cargo (if available) or npm
-        if command -v cargo &> /dev/null; then
-            cargo install tree-sitter-cli
-        elif command -v npm &> /dev/null; then
+        # Install libclang (required for building tree-sitter-cli)
+        log_info "Installing libclang dependencies..."
+        sudo apt-get install -y -qq libclang-dev clang
+        
+        # tree-sitter CLI via npm (faster, no compilation) or cargo
+        if command -v npm &> /dev/null; then
             npm install -g tree-sitter-cli
+            log_success "tree-sitter installed via npm"
+        elif command -v cargo &> /dev/null; then
+            cargo install tree-sitter-cli
+            log_success "tree-sitter installed via cargo"
         else
-            log_warn "tree-sitter requires cargo or npm, will be installed later"
+            log_warn "tree-sitter requires npm or cargo, skipping"
+            return
         fi
-        log_success "tree-sitter installed"
     fi
 }
 
