@@ -345,11 +345,23 @@ install_gcc() {
 install_tmux() {
     log_step "Installing Tmux..."
     
+    TMUX_MIN_VERSION="3.2"
+    TMUX_TARGET_VERSION="3.4"
+    
     if command -v tmux &> /dev/null; then
-        log_warn "Tmux already installed: $(tmux -V)"
+        CURRENT_VERSION=$(tmux -V | grep -oP '\d+\.\d+' | head -1)
+        log_info "Current tmux version: $CURRENT_VERSION"
+        
+        # Check if version is >= 3.2
+        if [ "$(echo "$CURRENT_VERSION >= $TMUX_MIN_VERSION" | bc -l)" = "1" ] 2>/dev/null; then
+            log_warn "Tmux $CURRENT_VERSION already installed (>= $TMUX_MIN_VERSION)"
+        else
+            log_warn "Tmux $CURRENT_VERSION is too old, building $TMUX_TARGET_VERSION from source..."
+            build_tmux_from_source
+        fi
     else
-        sudo apt-get install -y -qq tmux
-        log_success "Tmux installed"
+        log_info "Tmux not found, building $TMUX_TARGET_VERSION from source..."
+        build_tmux_from_source
     fi
     
     # Install TPM (Tmux Plugin Manager)
@@ -358,6 +370,40 @@ install_tmux() {
         git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
         log_success "TPM installed"
     fi
+}
+
+build_tmux_from_source() {
+    TMUX_VERSION="3.4"
+    log_info "Building Tmux $TMUX_VERSION from source..."
+    
+    # Install build dependencies
+    sudo apt-get install -y -qq \
+        libevent-dev \
+        ncurses-dev \
+        build-essential \
+        bison \
+        pkg-config \
+        autoconf \
+        automake
+    
+    cd /tmp
+    rm -rf tmux-${TMUX_VERSION}
+    
+    # Download and extract
+    curl -Lo tmux-${TMUX_VERSION}.tar.gz "https://github.com/tmux/tmux/releases/download/${TMUX_VERSION}/tmux-${TMUX_VERSION}.tar.gz"
+    tar xzf tmux-${TMUX_VERSION}.tar.gz
+    cd tmux-${TMUX_VERSION}
+    
+    # Build and install
+    ./configure
+    make -j$(nproc)
+    sudo make install
+    
+    # Cleanup
+    cd ~
+    rm -rf /tmp/tmux-${TMUX_VERSION} /tmp/tmux-${TMUX_VERSION}.tar.gz
+    
+    log_success "Tmux $TMUX_VERSION built and installed"
 }
 
 # Install Carapace (completions)
