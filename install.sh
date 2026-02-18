@@ -457,6 +457,28 @@ install_go() {
     fi
 }
 
+# Install OpenCode (AI coding assistant)
+install_opencode() {
+    log_step "Installing OpenCode..."
+    
+    if command -v opencode &> /dev/null; then
+        log_warn "OpenCode already installed: $(opencode --version 2>/dev/null || echo 'installed')"
+    else
+        # Prefer npm (via Volta) if available, otherwise use bun
+        if command -v npm &> /dev/null; then
+            npm install -g opencode-ai
+            log_success "OpenCode installed via npm"
+        elif command -v bun &> /dev/null; then
+            bun install -g opencode-ai
+            log_success "OpenCode installed via bun"
+        else
+            # Fallback to install script
+            curl -fsSL https://opencode.ai/install | bash
+            log_success "OpenCode installed via install script"
+        fi
+    fi
+}
+
 # Install Nerd Fonts (Iosevka Term)
 install_nerd_fonts() {
     log_step "Installing Nerd Fonts (Iosevka Term)..."
@@ -591,6 +613,7 @@ full_install() {
     install_bun
     install_carapace
     install_nerd_fonts
+    install_opencode
     setup_git
     setup_dotfiles
     
@@ -619,6 +642,7 @@ tools_only() {
     install_bun
     install_carapace
     install_nerd_fonts
+    install_opencode
     install_treesitter
 }
 
@@ -659,7 +683,7 @@ main() {
             echo "Available tools:"
             echo "  fish, tmux, neovim, starship, zoxide, atuin, fzf"
             echo "  fd, ripgrep, bat, lazygit, rust, go, volta, bun"
-            echo "  carapace, gcc, treesitter, fonts"
+            echo "  carapace, gcc, treesitter, fonts, opencode"
             echo ""
             read -p "Tool to install: " TOOL
             case $TOOL in
@@ -682,6 +706,7 @@ main() {
                 gcc) install_gcc ;;
                 treesitter|tree-sitter) install_treesitter ;;
                 fonts|nerdfonts) install_nerd_fonts ;;
+                opencode) install_opencode ;;
                 *) log_error "Unknown tool: $TOOL" ;;
             esac
             ;;

@@ -18,7 +18,7 @@ end
 # PATH configuration
 if test $IS_ARM_DEVICE -eq 1
     # ARM device (Radxa, Raspberry Pi, etc.)
-    set -x PATH $HOME/.local/bin $HOME/.cargo/bin $HOME/.volta/bin $HOME/.bun/bin /usr/local/bin $PATH
+    set -x PATH $HOME/.local/bin $HOME/.cargo/bin $HOME/.volta/bin $HOME/.bun/bin $HOME/go/bin /usr/local/go/bin /usr/local/bin $PATH
 else if test (uname) = Darwin
     # macOS - check for Apple Silicon vs Intel
     if test -f /opt/homebrew/bin/brew
