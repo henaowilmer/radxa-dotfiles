@@ -105,10 +105,31 @@ install_fish() {
     log_step "Installing Fish shell..."
     
     if command -v fish &> /dev/null; then
+        CURRENT_FISH_VERSION=$(fish --version | grep -oP '\d+\.\d+' | head -1)
         log_warn "Fish already installed: $(fish --version)"
+        
+        # Check if we need to upgrade from backports
+        if [ "$OS_ID" = "debian" ] && [ ! -z "$CURRENT_FISH_VERSION" ]; then
+            FISH_MAJOR=$(echo $CURRENT_FISH_VERSION | cut -d. -f1)
+            FISH_MINOR=$(echo $CURRENT_FISH_VERSION | cut -d. -f2)
+            
+            # If version is < 3.2, upgrade from backports
+            if [ "$FISH_MAJOR" -lt 3 ] || ([ "$FISH_MAJOR" -eq 3 ] && [ "$FISH_MINOR" -lt 2 ]); then
+                log_info "Upgrading Fish to newer version from backports..."
+                sudo apt-get install -y -qq -t ${OS_VERSION}-backports fish
+                log_success "Fish upgraded to $(fish --version)"
+            fi
+        fi
     else
-        sudo apt-get install -y -qq fish
-        log_success "Fish installed"
+        # Fresh installation
+        if [ "$OS_ID" = "debian" ]; then
+            # Install from backports to get Fish 3.6+
+            log_info "Installing Fish from backports for better compatibility..."
+            sudo apt-get install -y -qq -t ${OS_VERSION}-backports fish
+        else
+            sudo apt-get install -y -qq fish
+        fi
+        log_success "Fish installed: $(fish --version)"
     fi
     
     # Set Fish as default shell
@@ -729,6 +750,13 @@ main() {
     echo "  2. Start tmux and press prefix + I to install plugins"
     echo "  3. Open nvim to let LazyVim install plugins"
     echo ""
+    
+    # Kill tmux server if running to ensure it uses new Fish version
+    if pgrep -x tmux > /dev/null; then
+        log_info "Restarting tmux server to apply Fish updates..."
+        tmux kill-server 2>/dev/null || true
+        log_success "Tmux server restarted"
+    fi
 }
 
 # Run if called directly
