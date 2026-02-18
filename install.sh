@@ -89,6 +89,8 @@ install_base() {
         cmake \
         pkg-config \
         libssl-dev \
+        libclang-dev \
+        clang \
         openssh-server \
         htop \
         tree \
