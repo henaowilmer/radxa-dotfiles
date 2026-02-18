@@ -339,7 +339,12 @@ install_carapace() {
         log_warn "Carapace already installed"
     else
         # Download binary from GitHub releases
-        CARAPACE_VERSION=$(curl -s "https://api.github.com/repos/carapace-sh/carapace-bin/releases/latest" | grep -Po '"tag_name": "v\K[^"]*')
+        CARAPACE_VERSION=$(curl -sL "https://api.github.com/repos/carapace-sh/carapace-bin/releases/latest" | grep -oP '"tag_name": "v\K[^"]*' | head -1)
+        
+        if [ -z "$CARAPACE_VERSION" ]; then
+            log_warn "Could not fetch Carapace version, using fallback"
+            CARAPACE_VERSION="1.0.6"
+        fi
         
         if [ "$ARCH" = "arm64" ]; then
             CARAPACE_ARCH="arm64"
@@ -350,11 +355,23 @@ install_carapace() {
             return
         fi
         
-        curl -Lo /tmp/carapace.tar.gz "https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/carapace-bin_linux_${CARAPACE_ARCH}.tar.gz"
-        cd /tmp && tar xf carapace.tar.gz
-        sudo install carapace /usr/local/bin/
-        rm -f /tmp/carapace.tar.gz /tmp/carapace
-        log_success "Carapace installed"
+        log_info "Downloading Carapace v${CARAPACE_VERSION}..."
+        curl -fsSL -o /tmp/carapace.tar.gz "https://github.com/carapace-sh/carapace-bin/releases/download/v${CARAPACE_VERSION}/carapace-bin_${CARAPACE_VERSION}_linux_${CARAPACE_ARCH}.tar.gz"
+        
+        if [ $? -ne 0 ]; then
+            log_error "Failed to download Carapace"
+            return
+        fi
+        
+        cd /tmp && tar xzf carapace.tar.gz
+        if [ -f /tmp/carapace ]; then
+            sudo install carapace /usr/local/bin/
+            rm -f /tmp/carapace.tar.gz /tmp/carapace
+            log_success "Carapace installed"
+        else
+            log_error "Carapace binary not found after extraction"
+            rm -f /tmp/carapace.tar.gz
+        fi
     fi
 }
 
